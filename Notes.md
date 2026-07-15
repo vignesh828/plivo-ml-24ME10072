@@ -1,0 +1,5 @@
+# Final Notes
+
+1. **Signals Used:** My model relies heavily on the temporal dynamics of the last 1.5 seconds of speech, specifically the pitch acceleration (f0 trailing off) and the relative energy drop-off rate, combined with Zero-Crossing Rate to filter out breathing noises. 
+2. **Where it Fails:** The model still occasionally struggles with mid-sentence hesitations where the user's volume drops significantly but they intend to continue, as well as environments with sudden background noise spikes that distort the energy slope calculation.
+3. **With One More Day:** If I had more time, I would extract MFCCs (Mel-frequency cepstral coefficients) to capture phonetic characteristics rather than just prosody. Furthermore, I would train a small LSTM or GRU network in PyTorch, as recurrent architectures are naturally suited to capture the sequential build-up to an end-of-turn event better than static frame aggregations in a Random Forest.

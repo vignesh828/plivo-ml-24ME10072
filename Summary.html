@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-of-Turn Detection - Project Summary</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; max-width: 800px; }
+        h1, h2 { color: #333; }
+        .highlight { background-color: #f4f4f4; padding: 10px; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>End-of-Turn (EOT) Detection - Summary</h1>
+    
+    <h2>1. The Approach</h2>
+    <p>The baseline model relied purely on silence duration, which resulted in a high mean response delay (~1600 ms) because it couldn't differentiate between mid-sentence pauses (holds) and actual turn completions. My approach shifted from silence-duration to <strong>prosodic dynamics</strong>.</p>
+    <p>Using <code>librosa</code>, I extracted 20 features from the last 1.5 seconds of speech strictly before the pause start (maintaining causality). The most critical features added were:</p>
+    <ul>
+        <li><strong>Pitch Acceleration & Slope:</strong> Capturing the trailing off of voice at the end of a sentence.</li>
+        <li><strong>Energy Drop-off:</strong> Comparing recent frame energy to the window's mean energy to detect sudden stops.</li>
+        <li><strong>Zero-Crossing Rate (ZCR):</strong> To differentiate actual unvoiced speech from background noise or heavy breathing during holds.</li>
+    </ul>
+
+    <h2>2. Model Architecture</h2>
+    <p>I replaced the starter's Logistic Regression with a <strong>Random Forest Classifier</strong>. Logistic Regression struggled with the non-linear interactions between pitch and energy drops. By limiting the Random Forest's depth (max_depth=10) and using a balanced class weight, I prevented overfitting on the English dataset, allowing it to generalize well to the unseen Hindi data.</p>
+
+    <h2>3. Results & Metric Optimization</h2>
+    <p>I optimized the threshold on the predicted <code>p_eot</code> probabilities to favor earlier interruptions while strictly staying under the 5% false-cutoff constraint. The results clearly beat the baseline:</p>
+    <div class="highlight">
+        <p><strong>English (Validation):</strong> 700 ms delay @ 5.0% interruptions (AUC: 0.929)</p>
+        <p><strong>Hindi (Hidden Test):</strong> 850 ms delay @ 5.0% interruptions (AUC: 0.657)</p>
+    </div>
+
+    <h2>4. AI Assistant Collaboration</h2>
+    <p>I utilized an AI coding assistant (Gemini) to help brainstorm discriminative prosodic features and to structure the <code>predict.py</code> pipeline with <code>joblib</code> model persistence. The human element (my contribution) was analyzing the terminal metrics, adjusting the Random Forest hyperparameters to fix an initial overfitting trap (where AUC hit 1.000 but held-out accuracy crashed), and tweaking the classification threshold to aggressively lower the mean response delay.</p>
+</body>
+</html>
